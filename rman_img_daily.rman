@@ -127,15 +127,15 @@ release channel ch64;
 execute script bkp_arch_mydbdata;
 backup as copy current controlfile format '/ZFS/backup1/%U';
 backup as copy current controlfile for standby format '/ZFS/backup2/%U';
-DELETE force noprompt ARCHIVELOG UNTIL TIME "SYSDATE-2" like '+RECOC1/mydbdata/archivelog/%';
+DELETE force noprompt ARCHIVELOG UNTIL TIME "SYSDATE-2" like '+RECO/mydbdata/archivelog/%';
 execute script del_arch_mydbdata;
 DELETE noprompt expired ARCHIVELOG ALL;
 DELETE noprompt expired COPY;
 DELETE noprompt expired BACKUP;
 REPORT obsolete device type disk;
 DELETE noprompt obsolete device type disk;
-HOST "/zs3-2/scripts/snapOrganizer.sh root@192.168.201.1 zs5-pool0 mydbDATA1 mydbDATA 30 10";
-HOST "/zs3-2/scripts/snapOrganizer.sh root@192.168.201.5 zs5-pool1 mydbDATA2 mydbDATA 30 10";
+HOST "/zs3-2/scripts/snapOrganizer.sh root@192.168.1.1 zs5-pool0 mydbDATA1 mydbDATA 30 10";
+HOST "/zs3-2/scripts/snapOrganizer.sh root@192.168.1.1 zs5-pool1 mydbDATA2 mydbDATA 30 10";
 release channel ch01;
 release channel ch02;
 release channel ch03;
@@ -157,7 +157,7 @@ release channel ch16;
 RMAN> print script bkp_arch_mydbdata;  
 
 printing stored script: bkp_arch_mydbdata
-backup as copy archivelog from scn 805787898338 like '+RECOC1/mydbdata/archivelog%' format '/ZFS/arch/%U';
+backup as copy archivelog from scn 805787898338 like '+RECO/mydbdata/archivelog%' format '/ZFS/arch/%U';
 
 RMAN> print script del_arch_mydbdata
 2> ;
