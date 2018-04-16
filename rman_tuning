@@ -1,0 +1,52 @@
+
+--http://www.nyoug.org/Presentations/2010/December/Chien_RMAN.pdf
+select * from V$BACKUP_ASYNC_IO where type='AGGREGATE'
+
+select * from V$BACKUP_ASYNC_IO where 1=1--type='AGGREGATE'
+and IO_COUNT > 0 
+order by LONG_WAITS / IO_COUNT  desc;
+
+
+Query V$BACKUP_ASYNC_IO
+– Check EFFECTIVE_BYTES_PER_SECOND column (EBPS) for
+row where TYPE = 'AGGREGATE'
+– If EBPS < storage media throughput, run BACKUP VALIDATE
+• Case 1: BACKUP VALIDATE time ~= actual backup time,
+then read phase is the likely bottleneck
+– Refer to RMAN multiplexing and buffer usage guidelines
+– Investigate ‘slow’ performing files: find data file with highest
+(LONG_WAITS / IO_COUNT) ratio
+• If ASM, add disk spindles and/or re-balance disks
+• Move file to new disk or multiplex with another ‘slow’ 
+
+
+Case 2: If BACKUP VALIDATE time << actual backup time, then
+buffer copy or write to storage media phase is the likely bottleneck
+• Refer to backup compression and encryption guidelines
+• If tape backup, check media management (MML) settings
+– TCP/IP buffer size
+– Media management client/server buffer size
+– Client/socket timeout
+– Media server hardware, connectivity to tape
+– Enable tape compression (but not RMAN compression)
+
+
+--RMAN parametreleri.
+FILESPERSET = 1 
+SECTION SIZE = 32G
+
+MAXPIECESIZE 
+Just as a Backup can consist of multiple BackupSets, a BackupSet can consist of multiple BackupPieces. 
+A BackupSet can consist of multiple datafiles and a datafile may be split across multiple BackupPieces. 
+However, unlike the MAXSETSIZE that can be specified with the BACKUP command, MAXPIECESIZE is specified with the CONFIGURE CHANNEL. 
+(However, unlike the MAXSETSIZE which runs a check before beginning the backup, this limit is applied when creating backuppieces !) 
+
+
+MAXPIECESIZE: This option can't be specified in the clause "BACKUP", this must be specified in the clause "CONFIGURE". 
+With this option you can set the Maximun Size of the Backup Piece. 
+Note that RMAN will try to follow your value however it could be that RMAN create the Backup Piece with a size a little bit bigger or a little bit smaller. 
+The value of MAXPIECESIZE must be between 1 Kb and 2048 Gb. In the following example I will show you how to set the maximum size to 50M and then we will confirm this with "du -sh":
+
+RMAN> CONFIGURE CHANNEL DEVICE TYPE DISK MAXPIECESIZE 50M;
+
+
