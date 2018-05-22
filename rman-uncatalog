@@ -1,0 +1,31 @@
+--Uncatalog Archived logs
+RMAN>change copy of archivelog all uncatalog;
+RMAN>change copy like "/ZFS%" uncatalog;
+RMAN>change archivelog ‘e:\oracle\arch\<oracles_sid>\ARCxxx.001’;
+
+--Catalog
+RMAN> catalog start with '/u01/oracle/RMAN/mydb/backup';
+
+1) Catalog an archive log
+RMAN>CATALOG ARCHIVELOG '/oracle/oradata/arju/arc001_223.arc', '/oracle/oradata/arju/arc001_224.arc';
+
+2) Catalog a datafile copy
+RMAN>CATALOG DATAFILECOPY '/oradata/backup/users01.dbf' LEVEL 0;
+
+3) Catalog multiple copies in a directory
+RMAN>CATALOG START WITH '/tmp/backups' NOPROMPT;
+
+4) Catalog all files in the Flash Recovery Area
+RMAN>CATALOG RECOVERY AREA NOPROMPT;
+
+5) Catalog a backup piece
+RMAN>CATALOG BACKUPPIECE '/oradata2/o4jccf4'; 
+
+6) Uncatalog all archive logs
+RMAN>CHANGE ARCHIVELOG ALL UNCATALOG;
+
+7) Uncatalog a tablespace
+RMAN>CHANGE BACKUP OF TABLESPACE USERS UNCATALOG;
+
+8) Uncatalog a backuppiece
+RMAN>CHANGE BACKUPPIECE '/oradata2/oft7qq' UNCATALOG;
