@@ -1,0 +1,93 @@
+
+--http://ronr.blogspot.com/2016/01/ora-19633-control-file-record-230341-is.html
+
+RMAN> crosscheck archivelog all;
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=902 instance=HAYATTST1 device type=DISK
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03009: failure of crosscheck command on ORA_DISK_1 channel at 05/31/2018 16:44:11
+ORA-19633: control file record 192 is out of sync with recovery catalog
+
+RMAN> exit
+
+
+select name,SEQUENCE# from v$archived_log where recid = 192;
+NAME                                                                          SEQUENCE#
++RECOX4/HAYATTST/ARCHIVELOG/2018_04_16/thread_1_seq_99.26781.973621353        99
+
+
+
+RMAN> change archivelog sequence 99 incarnation 2 delete;
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=262 instance=HAYATTST1 device type=DISK
+List of Archived Log Copies for database with db_unique_name HAYATTST
+=====================================================================
+
+Key     Thrd Seq     S Low Time 
+------- ---- ------- - ---------
+192     1    99      A 16-APR-18
+        Name: +RECOX4/HAYATTST/ARCHIVELOG/2018_04_16/thread_1_seq_99.26781.973621353
+
+
+Do you really want to delete the above objects (enter YES or NO)? yes
+
+RMAN-06207: WARNING: 1 objects could not be deleted for DISK channel(s) due
+RMAN-06208:          to mismatched status.  Use CROSSCHECK command to fix status
+RMAN-06210: List of Mismatched objects
+RMAN-06211: ==========================
+RMAN-06212:   Object Type   Filename/Handle
+RMAN-06213: --------------- ---------------------------------------------------
+RMAN-06214: Archivelog      +RECOX4/HAYATTST/ARCHIVELOG/2018_04_16/thread_1_seq_99.26781.973621353
+
+RMAN> crosscheck archivelog from sequence 99 incarnation 2 like '+RECOX4/HAYATTST/ARCHIVELOG/2018_04_16/thread_1_seq_99.26781.973621353';
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=262 instance=HAYATTST1 device type=DISK
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03009: failure of crosscheck command on ORA_DISK_1 channel at 05/31/2018 16:47:26
+ORA-19633: control file record 192 is out of sync with recovery catalog
+
+RMAN>  change archivelog sequence 99 incarnation 2 unavailable;
+
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03009: failure of unavailable command on ORA_DISK_1 channel at 05/31/2018 16:47:46
+ORA-19633: control file record 192 is out of sync with recovery catalog
+
+RMAN>  change archivelog sequence 99 incarnation 2 uncatalog;
+
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03009: failure of uncatalog command on ORA_DISK_1 channel at 05/31/2018 16:48:05
+ORA-19633: control file record 192 is out of sync with recovery catalog
+
+RMAN> validate current controlfile;
+
+Starting validate at 31-MAY-18
+using channel ORA_DISK_1
+channel ORA_DISK_1: starting validation of datafile
+channel ORA_DISK_1: specifying datafile(s) for validation
+including current control file for validation
+channel ORA_DISK_1: validation complete, elapsed time: 00:00:01
+List of Control File and SPFILE
+===============================
+File Type    Status Blocks Failing Blocks Examined
+------------ ------ -------------- ---------------
+Control File OK     0              10230           
+Finished validate at 31-MAY-18
+
+RMAN> 
+
+RMAN> exit
+
