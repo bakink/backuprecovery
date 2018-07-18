@@ -1,0 +1,4 @@
+run { HOST "/zs3-2/scripts/archive_backup/calc-arch.py -d opusdata"; }
+replace script bkp_arch_opusdata from file "/zs3-2/scripts/archive_backup/bkp-arch_opusdata.rman";
+replace script del_arch_opusdata from file "/zs3-2/scripts/archive_backup/del-arch_opusdata.rman";
+run { execute script opusdata_img_daily; }
