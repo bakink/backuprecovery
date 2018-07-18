@@ -1,0 +1,33 @@
+
+  SELECT q.db_name,
+         TRUNC (SYSDATE - q.last_backup_time) BACKUP_OLMAYAN_GUN,
+         q.start_time,
+         q.end_time,
+         q.status,
+         q.input_type,
+         q.output_device_type,
+         q.input_bytes_display,
+         q.output_bytes_display,
+         q.input_bytes_per_sec_display,
+         q.output_bytes_per_sec_display,
+         q.elapsed_seconds,
+         q.last_backup_time
+    FROM (SELECT db_name,
+                 start_time,
+                 end_time,
+                 status,
+                 input_type,
+                 output_device_type,
+                 input_bytes_display,
+                 output_bytes_display,
+                 input_bytes_per_sec_display,
+                 output_bytes_per_sec_display,
+                 elapsed_seconds,
+                 MAX (end_time)
+                    KEEP (DENSE_RANK LAST ORDER BY end_time)
+                    OVER (PARTITION BY db_name)
+                    AS last_backup_time
+            FROM rcat.RC_RMAN_BACKUP_JOB_DETAILS
+           WHERE status = 'COMPLETED') Q
+   WHERE q.end_time = q.last_backup_time
+ORDER BY 1
