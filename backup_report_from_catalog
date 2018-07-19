@@ -31,3 +31,20 @@
            WHERE status = 'COMPLETED') Q
    WHERE q.end_time = q.last_backup_time
 ORDER BY 1
+
+---- daily rman jobs
+
+  SELECT b.name,
+         a.start_time,
+         a.end_time,
+         nvl(a.status,'BACKUP JOB NOT RUN') status,
+         a.input_type i_type,
+         a.output_device_type device,
+         a.input_bytes_display i_bytes,
+         a.output_bytes_display o_bytes,
+         a.input_bytes_per_sec_display i_bytes_ps,
+         a.output_bytes_per_sec_display o_bytes_ps,
+         a.elapsed_seconds elapsed_secs
+    FROM rcat.RC_RMAN_BACKUP_JOB_DETAILS a, rcat.rc_database b
+   WHERE a.db_name(+) = b.name AND a.start_time(+) > SYSDATE - 1
+ORDER BY start_time DESC;
