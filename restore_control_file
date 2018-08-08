@@ -4,3 +4,10 @@ allocate channel ch01 device type sbt_tape;
 send 'NSR_ENV=(NSR_SERVER=networker01.allianz_tr.local,NSR_CLIENT=alzx6db01-bck.allianz-tr.local,NSR_RECOVER_POOL="IZMCLONE")';
 restore controlfile from 'CF_c-2029123809-20180725-05';
 }
+
+--trace RMAN ORA-19511: How to determine if an RMAN FAILURE or HANG is caused by MML - Media Manager Layer (Doc ID 412950.1)
+run {
+allocate channel ch01 device type sbt_tape trace=1;
+send 'NSR_ENV=(NSR_SERVER=networker01.allianz_tr.local,NSR_CLIENT=alzx6db01-bck.allianz-tr.local,NSR_RECOVER_POOL="IZMCLONE")';
+restore controlfile from 'CF_c-280070717-20180803-01';
+} 
