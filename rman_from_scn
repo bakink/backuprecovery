@@ -1,0 +1,37 @@
+run {
+allocate channel ch01 device type disk CONNECT 'SYS/şifre@OPUSBKP1'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch02 device type disk CONNECT 'SYS/şifre@OPUSBKP1'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch03 device type disk CONNECT 'SYS/şifre@OPUSBKP1'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch04 device type disk CONNECT 'SYS/şifre@OPUSBKP1'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch05 device type disk CONNECT 'SYS/şifre@OPUSBKP2'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch06 device type disk CONNECT 'SYS/şifre@OPUSBKP2'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch07 device type disk CONNECT 'SYS/şifre@OPUSBKP2'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch08 device type disk CONNECT 'SYS/şifre@OPUSBKP2'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch09 device type disk CONNECT 'SYS/şifre@OPUSBKP3'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch10 device type disk CONNECT 'SYS/şifre@OPUSBKP3'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch11 device type disk CONNECT 'SYS/şifre@OPUSBKP3'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch12 device type disk CONNECT 'SYS/şifre@OPUSBKP3'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch13 device type disk CONNECT 'SYS/şifre@OPUSBKP4'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch14 device type disk CONNECT 'SYS/şifre@OPUSBKP4'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch15 device type disk CONNECT 'SYS/şifre@OPUSBKP4'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch16 device type disk CONNECT 'SYS/şifre@OPUSBKP4'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch17 device type disk CONNECT 'SYS/şifre@OPUSBKP1'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch18 device type disk CONNECT 'SYS/şifre@OPUSBKP1'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch19 device type disk CONNECT 'SYS/şifre@OPUSBKP1'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch20 device type disk CONNECT 'SYS/şifre@OPUSBKP1'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch21 device type disk CONNECT 'SYS/şifre@OPUSBKP2'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch22 device type disk CONNECT 'SYS/şifre@OPUSBKP2'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch23 device type disk CONNECT 'SYS/şifre@OPUSBKP2'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch24 device type disk CONNECT 'SYS/şifre@OPUSBKP2'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch25 device type disk CONNECT 'SYS/şifre@OPUSBKP3'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch26 device type disk CONNECT 'SYS/şifre@OPUSBKP3'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch27 device type disk CONNECT 'SYS/şifre@OPUSBKP3'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch28 device type disk CONNECT 'SYS/şifre@OPUSBKP3'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch29 device type disk CONNECT 'SYS/şifre@OPUSBKP4'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch30 device type disk CONNECT 'SYS/şifre@OPUSBKP4'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch31 device type disk CONNECT 'SYS/şifre@OPUSBKP4'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch32 device type disk CONNECT 'SYS/şifre@OPUSBKP4'  format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+
+BACKUP INCREMENTAL from SCN 898823788392 FILESPERSET = 1 SECTION SIZE = 10G TAG 'FORSTANDBY' DATABASE FORMAT '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+
+}
