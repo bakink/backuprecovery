@@ -35,3 +35,26 @@ allocate channel ch32 device type disk CONNECT 'SYS/şifre@OPUSBKP4'  format '/Z
 BACKUP INCREMENTAL from SCN 898823788392 FILESPERSET = 1 SECTION SIZE = 10G TAG 'FORSTANDBY' DATABASE FORMAT '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
 
 }
+
+
+CATALOG START WITH '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/';
+
+run {
+allocate channel ch01 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch02 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch03 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch04 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch05 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch06 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch07 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch08 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch09 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch10 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch11 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch12 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch13 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch14 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch15 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+allocate channel ch16 device type disk   format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
+RECOVER DATABASE NOREDO;
+}
