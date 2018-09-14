@@ -1,0 +1,261 @@
+Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Real Application Clusters, Automatic Storage Management, OLAP,
+Data Mining and Real Application Testing options
+[oracle@alzdrcdbadm01 ~]$ rman target /
+
+Recovery Manager: Release 11.2.0.4.0 - Production on Fri Sep 14 10:32:36 2018
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: OPUSDATA (DBID=1294696084, not open)
+
+RMAN> list copy of archivelog sequence 90015 thread 3;
+
+using target database control file instead of recovery catalog
+List of Archived Log Copies for database with db_unique_name OPUSX3DR
+=====================================================================
+
+Key     Thrd Seq     S Low Time 
+------- ---- ------- - ---------
+2579902 3    90015   A 12-SEP-18
+        Name: /ZFS/yedek/X3/OPUSDATA/arch/arch_D-OPUSDATA_id-1294696084_S-90015_T-3_A-1381137092_52tcv43c
+
+2574883 3    90015   A 12-SEP-18
+        Name: /ZFS/yedek/X6/OPUSDATA/arch/arch_D-OPUSDATA_id-1294696084_S-90015_T-3_A-1381137092_52tcv43c
+
+2573798 3    90015   A 12-SEP-18
+        Name: +RECOC1/opusdata/archivelog/2018_09_12/thread_3_seq_90015.35688.986673135
+
+2573799 3    90015   A 12-SEP-18
+        Name: /zs3-2/Att/archive/arch90015_3_932288472.log
+
+
+RMAN> exit
+
+
+Recovery Manager complete.
+[oracle@alzdrcdbadm01 ~]$ sqlplus / as sysdba
+
+SQL*Plus: Release 11.2.0.4.0 Production on Fri Sep 14 10:34:03 2018
+
+Copyright (c) 1982, 2013, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Real Application Clusters, Automatic Storage Management, OLAP,
+Data Mining and Real Application Testing options
+
+SQL> show paraemter dest_1
+SP2-0158: unknown SHOW option "paraemter"
+SP2-0158: unknown SHOW option "dest_1"
+SQL> show parameter dest_1
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+db_create_online_log_dest_1          string      +DATAX3
+log_archive_dest_1                   string      LOCATION=+RECOX2/OPUSX3DR/ARCH
+                                                 IVELOG
+log_archive_dest_10                  string
+log_archive_dest_11                  string
+log_archive_dest_12                  string
+log_archive_dest_13                  string
+log_archive_dest_14                  string
+log_archive_dest_15                  string
+log_archive_dest_16                  string
+log_archive_dest_17                  string
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+log_archive_dest_18                  string
+log_archive_dest_19                  string
+SQL> alter system set log_archive_dest_1='location=/ZFS/yedek/X3/OPUSDATA/arch';
+
+System altered.
+
+SQL> exit
+Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Real Application Clusters, Automatic Storage Management, OLAP,
+Data Mining and Real Application Testing options
+[oracle@alzdrcdbadm01 ~]$ rman target /
+
+Recovery Manager: Release 11.2.0.4.0 - Production on Fri Sep 14 10:34:51 2018
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: OPUSDATA (DBID=1294696084, not open)
+
+RMAN> crosscheck archivelog;
+
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-00558: error encountered while parsing input commands
+RMAN-01009: syntax error: found ";": expecting one of: "all, from, high, like, low, scn, sequence, time, until, double-quoted-string, integer, single-quoted-string"
+RMAN-01007: at line 1 column 22 file: standard input
+
+RMAN> crosscheck archivelog sequence 90015 thread 3;
+
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=2834 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=3070 device type=DISK
+allocated channel: ORA_DISK_3
+channel ORA_DISK_3: SID=3306 device type=DISK
+allocated channel: ORA_DISK_4
+channel ORA_DISK_4: SID=3542 device type=DISK
+allocated channel: ORA_DISK_5
+channel ORA_DISK_5: SID=3778 device type=DISK
+allocated channel: ORA_DISK_6
+channel ORA_DISK_6: SID=4014 device type=DISK
+allocated channel: ORA_DISK_7
+channel ORA_DISK_7: SID=4250 device type=DISK
+allocated channel: ORA_DISK_8
+channel ORA_DISK_8: SID=4486 device type=DISK
+allocated channel: ORA_DISK_9
+channel ORA_DISK_9: SID=4722 device type=DISK
+allocated channel: ORA_DISK_10
+channel ORA_DISK_10: SID=4958 device type=DISK
+allocated channel: ORA_DISK_11
+channel ORA_DISK_11: SID=5194 device type=DISK
+allocated channel: ORA_DISK_12
+channel ORA_DISK_12: SID=5430 device type=DISK
+allocated channel: ORA_DISK_13
+channel ORA_DISK_13: SID=5666 device type=DISK
+allocated channel: ORA_DISK_14
+channel ORA_DISK_14: SID=5902 device type=DISK
+allocated channel: ORA_DISK_15
+channel ORA_DISK_15: SID=6138 device type=DISK
+allocated channel: ORA_DISK_16
+channel ORA_DISK_16: SID=6375 device type=DISK
+validation succeeded for archived log
+archived log file name=/ZFS/yedek/X3/OPUSDATA/arch/arch_D-OPUSDATA_id-1294696084_S-90015_T-3_A-1381137092_52tcv43c RECID=2579902 STAMP=986810310
+Crosschecked 1 objects
+
+validation failed for archived log
+archived log file name=/ZFS/yedek/X6/OPUSDATA/arch/arch_D-OPUSDATA_id-1294696084_S-90015_T-3_A-1381137092_52tcv43c RECID=2574883 STAMP=986681472
+validation failed for archived log
+archived log file name=+RECOC1/opusdata/archivelog/2018_09_12/thread_3_seq_90015.35688.986673135 RECID=2573798 STAMP=986673155
+validation failed for archived log
+archived log file name=/zs3-2/Att/archive/arch90015_3_932288472.log RECID=2573799 STAMP=986673155
+Crosschecked 3 objects
+
+
+
+
+
+RMAN> 
+RMAN> 
+RMAN> 
+RMAN> 
+
+RMAN> list copy of archivelog sequence 90015 thread 3;
+
+List of Archived Log Copies for database with db_unique_name OPUSX3DR
+=====================================================================
+
+Key     Thrd Seq     S Low Time 
+------- ---- ------- - ---------
+2579902 3    90015   A 12-SEP-18
+        Name: /ZFS/yedek/X3/OPUSDATA/arch/arch_D-OPUSDATA_id-1294696084_S-90015_T-3_A-1381137092_52tcv43c
+
+2574883 3    90015   X 12-SEP-18
+        Name: /ZFS/yedek/X6/OPUSDATA/arch/arch_D-OPUSDATA_id-1294696084_S-90015_T-3_A-1381137092_52tcv43c
+
+2573798 3    90015   X 12-SEP-18
+        Name: +RECOC1/opusdata/archivelog/2018_09_12/thread_3_seq_90015.35688.986673135
+
+2573799 3    90015   X 12-SEP-18
+        Name: /zs3-2/Att/archive/arch90015_3_932288472.log
+
+
+RMAN> delete expired archivelog sequence 90015 thread 3;
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+released channel: ORA_DISK_3
+released channel: ORA_DISK_4
+released channel: ORA_DISK_5
+released channel: ORA_DISK_6
+released channel: ORA_DISK_7
+released channel: ORA_DISK_8
+released channel: ORA_DISK_9
+released channel: ORA_DISK_10
+released channel: ORA_DISK_11
+released channel: ORA_DISK_12
+released channel: ORA_DISK_13
+released channel: ORA_DISK_14
+released channel: ORA_DISK_15
+released channel: ORA_DISK_16
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=2834 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=3070 device type=DISK
+allocated channel: ORA_DISK_3
+channel ORA_DISK_3: SID=3306 device type=DISK
+allocated channel: ORA_DISK_4
+channel ORA_DISK_4: SID=3542 device type=DISK
+allocated channel: ORA_DISK_5
+channel ORA_DISK_5: SID=3778 device type=DISK
+allocated channel: ORA_DISK_6
+channel ORA_DISK_6: SID=4014 device type=DISK
+allocated channel: ORA_DISK_7
+channel ORA_DISK_7: SID=4250 device type=DISK
+allocated channel: ORA_DISK_8
+channel ORA_DISK_8: SID=4486 device type=DISK
+allocated channel: ORA_DISK_9
+channel ORA_DISK_9: SID=4722 device type=DISK
+allocated channel: ORA_DISK_10
+channel ORA_DISK_10: SID=4958 device type=DISK
+allocated channel: ORA_DISK_11
+channel ORA_DISK_11: SID=5194 device type=DISK
+allocated channel: ORA_DISK_12
+channel ORA_DISK_12: SID=5430 device type=DISK
+allocated channel: ORA_DISK_13
+channel ORA_DISK_13: SID=5666 device type=DISK
+allocated channel: ORA_DISK_14
+channel ORA_DISK_14: SID=5902 device type=DISK
+allocated channel: ORA_DISK_15
+channel ORA_DISK_15: SID=6138 device type=DISK
+allocated channel: ORA_DISK_16
+channel ORA_DISK_16: SID=6375 device type=DISK
+List of Archived Log Copies for database with db_unique_name OPUSX3DR
+=====================================================================
+
+Key     Thrd Seq     S Low Time 
+------- ---- ------- - ---------
+2574883 3    90015   X 12-SEP-18
+        Name: /ZFS/yedek/X6/OPUSDATA/arch/arch_D-OPUSDATA_id-1294696084_S-90015_T-3_A-1381137092_52tcv43c
+
+2573798 3    90015   X 12-SEP-18
+        Name: +RECOC1/opusdata/archivelog/2018_09_12/thread_3_seq_90015.35688.986673135
+
+2573799 3    90015   X 12-SEP-18
+        Name: /zs3-2/Att/archive/arch90015_3_932288472.log
+
+
+Do you really want to delete the above objects (enter YES or NO)? yes
+deleted archived log
+archived log file name=/ZFS/yedek/X6/OPUSDATA/arch/arch_D-OPUSDATA_id-1294696084_S-90015_T-3_A-1381137092_52tcv43c RECID=2574883 STAMP=986681472
+deleted archived log
+archived log file name=+RECOC1/opusdata/archivelog/2018_09_12/thread_3_seq_90015.35688.986673135 RECID=2573798 STAMP=986673155
+deleted archived log
+archived log file name=/zs3-2/Att/archive/arch90015_3_932288472.log RECID=2573799 STAMP=986673155
+Deleted 3 EXPIRED objects
+
+
+RMAN> 
+
+RMAN> list copy of archivelog sequence 90015 thread 3;
+
+List of Archived Log Copies for database with db_unique_name OPUSX3DR
+=====================================================================
+
+Key     Thrd Seq     S Low Time 
+------- ---- ------- - ---------
+2579902 3    90015   A 12-SEP-18
+        Name: /ZFS/yedek/X3/OPUSDATA/arch/arch_D-OPUSDATA_id-1294696084_S-90015_T-3_A-1381137092_52tcv43c
+
+
+RMAN>
