@@ -1,0 +1,2 @@
+
+backup as copy archivelog sequence 94900 thread 3 like '+RECOC1/opusdata/archivelog%' format '/ZFS/yedek/X6/SANDBOX/sandbox1/OPUS_INCR/%U';
