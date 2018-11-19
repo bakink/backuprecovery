@@ -1,0 +1,222 @@
+
+********************************************************************************************
+run { HOST "/zs3-2/scripts/archive_backup/calc-arch.py -d opusdata"; }
+replace script bkp_arch_opusdata from file "/zs3-2/scripts/archive_backup/bkp-arch_opusdata.rman";
+replace script del_arch_opusdata from file "/zs3-2/scripts/archive_backup/del-arch_opusdata.rman";
+run { execute script opusdata_img_daily; }
+
+
+#cat /zs3-2/scripts/archive_backup/calc-arch.py
+********************************************************************************************
+#!/usr/bin/env python
+
+# Last backed up archive log calculate script
+# Author:  zz zz
+# Version: 2.1
+# Date:    2017-10-05
+
+import cx_Oracle
+import getopt
+import sys
+import json
+
+def createScript(dbname):
+
+    # db/zfs path information from json mapping file
+    with open('/zs3-2/scripts/archive_backup/db-mapping.json') as mapping_file:
+        data = json.load(mapping_file)
+
+    # creates "bkp-arch_<dbname>.rman" and del-arch_<dbname>.rman" like file names
+    BKPFILE = data["output"]["BKP"].split(".")[0]+"_"\
+            +dbname.lower()+"."+data["output"]["BKP"].split(".")[1]
+    DELFILE = data["output"]["DEL"].split(".")[0]+"_"\
+            +dbname.lower()+"."+data["output"]["BKP"].split(".")[1]
+
+    SCN = calculateSCN(dbname)
+
+    # creates backup & delete scripts
+    BKPSCR = "backup as copy archivelog from scn "+SCN+" like '"\
+            +data[dbname]["ASM_ARCH"]+"%' format '"+data[dbname]["ZFS_ARCH"]+"/%U';"
+    DELSCR = "delete force noprompt archivelog until scn "+SCN+" like '"\
+            +data[dbname]["ZFS_PATH"]+"/%';"
+
+    # writes the created scripts to the files
+    arch_bkp = open(BKPFILE,"w")
+    arch_bkp.write(BKPSCR)
+    arch_bkp.close()
+
+    arch_del = open(DELFILE,"w")
+    arch_del.write(DELSCR)
+    arch_del.close()
+
+    print(BKPFILE+" :\n"+BKPSCR)
+    print(DELFILE+" :\n"+DELSCR)
+
+def calculateSCN(dbname):
+
+    # login information from json mapping file
+    with open('/zs3-2/scripts/archive_backup/db-mapping.json') as mapping_file:
+        data = json.load(mapping_file)
+
+    # connection
+    conn_str=data["login"]["username"]+"/"+data["login"]["password"]+"@"\
+            +data[dbname]["SCAN"]+".allianz-tr.local:"+data[dbname]["PORT"]+"/"+dbname.upper()
+    connection = cx_Oracle.connect(conn_str)
+    scn_query = connection.cursor()
+
+    # query
+    scn_query.execute("SELECT to_char(MIN(SCN)) FROM (SELECT MAX(NEXT_CHANGE#) SCN FROM V$ARCHIVED_LOG WHERE NAME LIKE '"+data[dbname]["ZFS_PATH"]+"%' GROUP BY THREAD#)")
+    SCN = scn_query.fetchone()[0]
+    scn_query.close()
+    connection.close()
+
+    return SCN
+
+def main(argv):
+    try:
+        if len(sys.argv) == 1:
+            print (sys.argv[0]+"  -d<database>")
+            sys.exit(2)
+        opts, args = getopt.getopt(argv, 'hd:', ['dbname='])
+    except (getopt.GetoptError):
+        print (sys.argv[0]+"  -d<database>")
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            print (sys.argv[0]+" -d<database>")
+            sys.exit()
+        elif opt in ("-d", "--db"):
+            dbname = arg.upper()
+    createScript(dbname)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
+********************************************************************************************
+
+cat /zs3-2/scripts/archive_backup/db-mapping.json
+{
+        "login": {
+                "username": "user",
+                "password": "pasword"
+        },
+        "output": {
+                "BKP": "/zs3-2/scripts/archive_backup/bkp-arch.rman",
+                "DEL": "/zs3-2/scripts/archive_backup/del-arch.rman"
+        },
+        "OPUSDATA": {
+                "SCAN": "opusprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/ZFS/yedek/X6/OPUSDATA",
+                "ASM_ARCH": "+RECOC1/opusdata/archivelog",
+                "ZFS_ARCH": "/ZFS/yedek/X6/OPUSDATA/arch"
+        },
+        "HAYAT": {
+                "SCAN": "hayatprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/ZFS/yedek/X6/HAYAT",
+                "ASM_ARCH": "+RECOC1/hayat/archivelog",
+                "ZFS_ARCH": "/ZFS/yedek/X6/HAYAT/arch"
+        },
+        "REPOPROD": {
+                "SCAN": "repoprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/zs3-2/yedek/X4/REPOPROD",
+                "ASM_ARCH": "+RECOC1/REPOPROD/ARCHIVELOG",
+                "ZFS_ARCH": "/zs3-2/yedek/X4/REPOPROD/backup2"
+        },
+        "KASCV": {
+                "SCAN": "kascvprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/ZFS/yedek/X6/KASCV",
+                "ASM_ARCH": "+RECOC1/KASCV/ARCHIVELOG",
+                "ZFS_ARCH": "/ZFS/yedek/X6/KASCV/backup2"
+        },
+
+        "SMARTMSG": {
+                "SCAN": "smartmsgprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/ZFS/yedek/X6/SMARTMSG",
+                "ASM_ARCH": "+RECOC1/SMARTMSG/ARCHIVELOG",
+                "ZFS_ARCH": "/ZFS/yedek/X6/SMARTMSG/backup2"
+        },
+
+        "IRISDB": {
+                "SCAN": "irisprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/ZFS/yedek/X6/IRISDB",
+                "ASM_ARCH": "+RECOC1/IRISDB/ARCHIVELOG",
+                "ZFS_ARCH": "/ZFS/yedek/X6/IRISDB/backup2"
+        },
+
+        "DWHPROD": {
+                "SCAN": "dwhprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/ZFS/yedek/X7/DWHPROD",
+                "ASM_ARCH": "+RECOC1/DWHPROD/ARCHIVELOG",
+                "ZFS_ARCH": "/ZFS/yedek/X7/DWHPROD/backup2"
+        },
+
+        "MDMPROD": {
+                "SCAN": "mdmprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/ZFS/yedek/X7/MDMPROD",
+                "ASM_ARCH": "+RECOC1/MDMPROD/ARCHIVELOG",
+                "ZFS_ARCH": "/ZFS/yedek/X7/MDMPROD/backup2"
+        },
+
+        "ACN": {
+                "SCAN": "acnprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/ZFS/yedek/X7/ACN",
+                "ASM_ARCH": "+RECOC1/acn/archivelog",
+                "ZFS_ARCH": "/ZFS/yedek/X7/ACN/backup2"
+        },
+
+        "CLNTPROD": {
+                "SCAN": "clntprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/ZFS/yedek/X7/CLNTPROD",
+                "ASM_ARCH": "+RECOC1/clntprod/archivelog",
+                "ZFS_ARCH": "/ZFS/yedek/X7/CLNTPROD/backup2"
+        },
+
+        "ODSPROD": {
+                "SCAN": "odsprod-scan",
+                "PORT": "1453",
+                "ZFS_PATH": "/ZFS/yedek/X7/ODSPROD",
+                "ASM_ARCH": "+RECOC1/ODSPROD/ARCHIVELOG",
+                "ZFS_ARCH": "/ZFS/yedek/X7/ODSPROD/backup2"
+        },
+
+        "ATLASDB": { 
+                "SCAN": "atlasprod-scan", 
+                "PORT": "1453", 
+                "ZFS_PATH": "/ZFS/yedek/X6/ATLASDB", 
+                "ASM_ARCH": "+RECOC1/ATLASDB/ARCHIVELOG", 
+                "ZFS_ARCH": "/ZFS/yedek/X6/ATLASDB/backup2" 
+        },
+
+        "ARSVDB": {
+                "SCAN": "arsvprod-scan",
+                "PORT": "1521",
+                "ZFS_PATH": "/ZFS/yedek/X3/ARSVDB",
+                "ASM_ARCH": "/ZFS/ARSVDB/data1/onlinelog/archivelog",
+                "ZFS_ARCH": "/ZFS/yedek/X3/ARSVDB/backup2"
+        },
+
+        "OPUSDEVL": {
+                "SCAN": "opusdevl-scan",
+                "PORT": "1521",
+                "ZFS_PATH": "/ZFS/yedek/X3/OPUSDEVL",
+                "ASM_ARCH": "+RECOX4/opusdevl/archivelog",
+                "ZFS_ARCH": "/ZFS/yedek/X3/OPUSDEVL/backup2"
+        },
+
+        "DSA": {
+                "SCAN": "hayatdevl-scan",
+                "PORT": "1521",
+                "ZFS_PATH": "/ZFS/yedek/X3/DSA",
+                "ASM_ARCH": "+RECOX4/DSA/ARCHIVELOG",
+                "ZFS_ARCH": "/ZFS/yedek/X3/DSA/backup2"
+        }
+}
