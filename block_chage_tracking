@@ -1,0 +1,4 @@
+
+select * from V$BLOCK_CHANGE_TRACKING
+
+alter database enable block change tracking using file '+DATAC1' ;
