@@ -1,0 +1,36 @@
+run {
+# backup all archive logs
+ALLOCATE CHANNEL ch00 TYPE disk format '/home/u01/app/oracle/orabackup/al_%d_%I_%s_%p_%t';
+ALLOCATE CHANNEL ch01 TYPE disk format '/home/u01/app/oracle/orabackup/al_%d_%I_%s_%p_%t';
+sql 'alter system archive log current';
+BACKUP
+    filesperset 10
+    FORMAT '/home/u01/app/oracle/orabackup/al_%d_%I_%s_%p_%t'
+    TAG 'db_bk_inc_lvl0'
+    NOT BACKED UP ARCHIVELOG ALL;
+    delete force noprompt archivelog until time 'sysdate-3' like '/home/%';
+RELEASE CHANNEL ch00;
+RELEASE CHANNEL ch01;
+# backup controlfile
+ALLOCATE CHANNEL ch00 TYPE disk format '/home/u01/app/oracle/orabackup/cf_%d_%I_%s_%p_%t';
+BACKUP
+    FORMAT '/home/u01/app/oracle/orabackup/cf_%d_%I_%s_%p_%t'
+    TAG 'db_bk_inc_lvl0'
+    CURRENT CONTROLFILE;
+RELEASE CHANNEL ch00;
+# backup spfile
+ALLOCATE CHANNEL ch00 TYPE disk format '/home/u01/app/oracle/orabackup/spfile_%d_%I_%s_%p_%t';
+BACKUP
+    FORMAT '/home/u01/app/oracle/orabackup/spfile_%d_%I_%s_%p_%t'
+    TAG 'db_bk_inc_lvl0'
+    SPFILE;
+RELEASE CHANNEL ch00;
+# delete obselete
+ALLOCATE CHANNEL ch00 TYPE disk;
+DELETE noprompt expired ARCHIVELOG ALL;
+DELETE noprompt expired COPY;
+DELETE noprompt expired BACKUP;
+REPORT obsolete device type disk;
+DELETE noprompt obsolete device type disk;
+RELEASE CHANNEL ch00;
+}

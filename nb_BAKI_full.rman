@@ -1,0 +1,58 @@
+run {
+ALLOCATE CHANNEL ch00 TYPE disk format '/home/u01/app/oracle/orabackup/bk_%d_%I_%s_%p_%t';
+ALLOCATE CHANNEL ch01 TYPE disk format '/home/u01/app/oracle/orabackup/bk_%d_%I_%s_%p_%t';
+ALLOCATE CHANNEL ch02 TYPE disk format '/home/u01/app/oracle/orabackup/bk_%d_%I_%s_%p_%t';
+ALLOCATE CHANNEL ch03 TYPE disk format '/home/u01/app/oracle/orabackup/bk_%d_%I_%s_%p_%t';
+ALLOCATE CHANNEL ch04 TYPE disk format '/home/u01/app/oracle/orabackup/bk_%d_%I_%s_%p_%t';
+ALLOCATE CHANNEL ch05 TYPE disk format '/home/u01/app/oracle/orabackup/bk_%d_%I_%s_%p_%t';
+ALLOCATE CHANNEL ch06 TYPE disk format '/home/u01/app/oracle/orabackup/bk_%d_%I_%s_%p_%t';
+ALLOCATE CHANNEL ch07 TYPE disk format '/home/u01/app/oracle/orabackup/bk_%d_%I_%s_%p_%t';
+BACKUP
+    INCREMENTAL LEVEL=0
+    FILESPERSET 1
+    FORMAT '/home/u01/app/oracle/orabackup/bk_%d_%I_%s_%p_%t'
+    TAG 'db_bk_inc_lvl0'
+    DATABASE;
+    sql 'alter system archive log current';
+RELEASE CHANNEL ch00;
+RELEASE CHANNEL ch01;
+RELEASE CHANNEL ch02;
+RELEASE CHANNEL ch03;
+RELEASE CHANNEL ch04;
+RELEASE CHANNEL ch05;
+RELEASE CHANNEL ch06;
+RELEASE CHANNEL ch07;
+# backup all archive logs
+ALLOCATE CHANNEL ch00 TYPE disk format '/home/u01/app/oracle/orabackup/al_%d_%I_%s_%p_%t';
+ALLOCATE CHANNEL ch01 TYPE disk format '/home/u01/app/oracle/orabackup/al_%d_%I_%s_%p_%t';
+BACKUP
+    filesperset 10
+    FORMAT '/home/u01/app/oracle/orabackup/al_%d_%I_%s_%p_%t'
+    TAG 'db_bk_inc_lvl0'
+    NOT BACKED UP ARCHIVELOG ALL;
+    delete force noprompt archivelog until time 'sysdate-3' like '/home/%';
+RELEASE CHANNEL ch00;
+RELEASE CHANNEL ch01;
+# backup controlfile
+ALLOCATE CHANNEL ch00 TYPE disk format '/home/u01/app/oracle/orabackup/cf_%d_%I_%s_%p_%t';
+BACKUP
+    FORMAT '/home/u01/app/oracle/orabackup/cf_%d_%I_%s_%p_%t'
+    TAG 'db_bk_inc_lvl0'
+    CURRENT CONTROLFILE;
+RELEASE CHANNEL ch00;
+# backup spfile
+ALLOCATE CHANNEL ch00 TYPE disk format '/home/u01/app/oracle/orabackup/spfile_%d_%I_%s_%p_%t';
+BACKUP
+    FORMAT '/home/u01/app/oracle/orabackup/spfile_%d_%I_%s_%p_%t'
+    TAG 'db_bk_inc_lvl0'
+    SPFILE;
+RELEASE CHANNEL ch00;
+# delete obselete
+ALLOCATE CHANNEL ch00 TYPE disk;
+DELETE noprompt expired ARCHIVELOG ALL;
+DELETE noprompt expired COPY;
+DELETE noprompt expired BACKUP;
+REPORT obsolete device type disk;
+DELETE noprompt obsolete device type disk;
+RELEASE CHANNEL ch00;
+}
