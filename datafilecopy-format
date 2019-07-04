@@ -1,0 +1,17 @@
+
+--http://mvelikikh.blogspot.com/2019/06/a-case-for-datafilecopy-format.html
+
+run {
+  backup incremental level 1 
+    format '+MIGR' for recover of copy with tag migr 
+    datafilecopy format '+MIGR'
+    tablespace pdb:test_ts;
+  recover copy of tablespace pdb:test_ts with tag migr;
+}
+---Another way to specify location for image copies in that case is an explicit channel configuration:
+run {
+  # allocate as many channels as needed
+  allocate channel c1 device type disk format '+MIGR';
+  backup incremental level 1 for recover of copy with tag migr tablespace pdb:test_ts;
+  recover copy of tablespace pdb:test_ts with tag migr;
+}
