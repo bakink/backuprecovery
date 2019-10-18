@@ -1,0 +1,23 @@
+
+run
+{
+set until time "to_date('09.10.2019 10:00:00','DD.MM.YYYY HH24:MI:SS')";
+allocate channel ch00 type 'sbt_tape' parms 'ENV=(NB_ORA_CLIENT= omtedbp00_bckp)';
+allocate channel ch01 type 'sbt_tape' parms 'ENV=(NB_ORA_CLIENT= omtedbp00_bckp)';
+allocate channel ch02 type 'sbt_tape' parms 'ENV=(NB_ORA_CLIENT= omtedbp00_bckp)';
+allocate channel ch03 type 'sbt_tape' parms 'ENV=(NB_ORA_CLIENT= omtedbp00_bckp)';
+allocate channel ch04 type 'sbt_tape' parms 'ENV=(NB_ORA_CLIENT= omtedbp01_bckp)';
+allocate channel ch05 type 'sbt_tape' parms 'ENV=(NB_ORA_CLIENT= omtedbp01_bckp)';
+allocate channel ch06 type 'sbt_tape' parms 'ENV=(NB_ORA_CLIENT= omtedbp01_bckp)';
+allocate channel ch07 type 'sbt_tape' parms 'ENV=(NB_ORA_CLIENT= omtedbp01_bckp)';
+ set archivelog destination to '+DATA';
+ restore archivelog from logseq=234304 until logseq=234394 thread 2;
+release channel ch00;
+release channel ch01;
+release channel ch02;
+release channel ch03;
+release channel ch04;
+release channel ch05;
+release channel ch06;
+release channel ch07;
+}
