@@ -1,0 +1,29 @@
+--https://mdinh.wordpress.com/2020/05/12/testing-rman-restore-validate-from-tape/
+
+oracle@hawk:/home/oracle$ rman checksyntax @ restore_validate_idpa_ddbea.rman
+ 
+Recovery Manager: Release 11.2.0.4.0 - Production on Tue May 12 07:24:57 2020
+ 
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+ 
+RMAN> set echo on
+2> connect target;
+3> show all;
+4> list backup summary;
+5> report schema;
+6> run {
+7> allocate channel ch1 type 'SBT_TAPE' parms 'SBT_LIBRARY=/opt/libddboostora.so,SBT_PARMS=(CONFIG_FILE=/opt/idpa_ddbea.config)';
+8> allocate channel ch2 type 'SBT_TAPE' parms 'SBT_LIBRARY=/opt/libddboostora.so,SBT_PARMS=(CONFIG_FILE=/opt/idpa_ddbea.config)';
+9> allocate channel ch3 type 'SBT_TAPE' parms 'SBT_LIBRARY=/opt/libddboostora.so,SBT_PARMS=(CONFIG_FILE=/opt/idpa_ddbea.config)';
+10> crosscheck backup;
+11> restore validate spfile;
+12> restore validate controlfile;
+13> restore database preview;
+14> restore validate database;
+15> recover database preview;
+16> }
+17> exit
+The cmdfile has no syntax errors
+ 
+Recovery Manager complete.
+oracle@hawk:/home/oracle$
