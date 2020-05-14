@@ -1,0 +1,27 @@
+--https://mdinh.wordpress.com/2020/05/14/rman-restore-from-tape/
+
+
+$ rman @ restore.rman
+ 
+Recovery Manager: Release 11.2.0.4.0 - Production on Wed May 13 15:37:09 2020
+ 
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+ 
+RMAN> set echo on
+2> connect target;
+3> run {
+4> allocate channel ch1 type 'SBT_TAPE' parms 'SBT_LIBRARY=/opt/libddboostora.so,SBT_PARMS=(CONFIG_FILE=/opt/idpa_ddbea.config)';
+5> allocate channel ch2 type 'SBT_TAPE' parms 'SBT_LIBRARY=/opt/libddboostora.so,SBT_PARMS=(CONFIG_FILE=/opt/idpa_ddbea.config)';
+6> allocate channel ch3 type 'SBT_TAPE' parms 'SBT_LIBRARY=/opt/libddboostora.so,SBT_PARMS=(CONFIG_FILE=/opt/idpa_ddbea.config)';
+7> set dbid 2937483440;
+8> restore controlfile from autobackup;
+9> alter database mount;
+10> restore database;
+11> recover database;
+12> alter database open resetlogs;
+13> release channel ch1;
+14> release channel ch2;
+15> release channel ch3;
+16> }
+17> exit
+echo set on
