@@ -1,4 +1,5 @@
 --https://mdinh.wordpress.com/2020/05/14/rman-restore-from-tape/
+--https://ittutorial.org/restore-oracle-database-controlfile-datafile-archivelog-via-rman-from-tape-backup-how-to/
 
 
 $ rman @ restore.rman
