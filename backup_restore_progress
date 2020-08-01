@@ -1,0 +1,10 @@
+
+  SELECT /*+ rule */ '@se '||SID sid, command_id, operation, status, object_type,
+  mbytes_processed/1024 gb_processed,input_bytes/1024/1024/1024 input_gb, output_bytes/1024/1024/1024 output_gb,
+  to_char(start_time,'DD-MM-YY HH24:MI:SS') start_time,to_char(end_time,'DD-MM-YY HH24:MI:SS') end_time,
+  ROUND ((end_time - start_time) * 24, 2) elapsed_time,
+  ROUND ((mbytes_processed / 1024) / ((end_time - start_time) * 24),2) gb_per_hour,
+  ROUND ((mbytes_processed / 1024) / ((end_time - start_time) * 24 * 60 * 60),2) gb_per_sec,mbytes_processed
+  FROM v$rman_status
+  WHERE status LIKE 'RUNNING%' and (operation like '%RESTORE%' or operation like '%BACKUP%')
+  ORDER BY start_time DESC
