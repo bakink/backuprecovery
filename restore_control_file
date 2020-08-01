@@ -1,4 +1,6 @@
 
+RMAN> list backup of controlfile completed between "to_date('11.06.2014','dd.mm.yyyy hh24')" and "to_date('12.06.2014','dd.mm.yyyy hh24')";
+
 run {
 allocate channel ch01 device type sbt_tape;
 send 'NSR_ENV=(NSR_SERVER=networker01.allianz_tr.local,NSR_CLIENT=alzx6db01-bck.allianz-tr.local,NSR_RECOVER_POOL="IZMCLONE")';
