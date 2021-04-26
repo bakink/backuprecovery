@@ -1,0 +1,15 @@
+
+1) Offline datafile
+SQL> alter database datafile '+DG_ATLAS_DATA/usrnew/datafile/swatm_hcc.14176.1052249197' offline;
+
+2) Rman ile datafile copyala
+RMAN> copy datafile '+DG_ATLAS_DATA/usrnew/datafile/swatm_hcc.14176.1052249197' to '+DG_ATLAS_USR_ZFS_HCC';
+ 
+3)Sqlplus ile rename et
+SQL> ALTER DATABASE RENAME FILE '+DG_ATLAS_DATA/usrnew/datafile/swatm_hcc.14176.1052249197' TO '+DG_ATLAS_USR_ZFS_HCC/usrnew/datafile/swatm_hcc.2120.1052256097'; 
+
+4)sqlplus ile recover yak  
+SQL> RECOVER DATAFILE '+DG_ATLAS_USR_ZFS_HCC/usrnew/datafile/swatm_hcc.2120.1052256097';
+
+5) Datafile online 
+SQL> ALTER DATABASE DATAFILE '+DG_ATLAS_USR_ZFS_HCC/usrnew/datafile/swatm_hcc.2120.1052256097' ONLINE; 
