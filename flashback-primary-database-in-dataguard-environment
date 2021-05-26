@@ -1,0 +1,90 @@
+--https://dbaclass.com/article/flashback-primary-database-in-dataguard-environment/
+
+
+ Development wanted to do some changes in the dev database, which needs to be rolled back once testing is over.
+So we have chosen to create flashback restore point before they do the changes and flashback the database, once testing is over.
+Now there is a little twist. This is a data guard environment, i.e it has a standby database. Doing flashback on the primary database will break redo apply.
+Below are the steps to flashback primary database in data guard environment safely.
+
+1. Make sure both primary and standby database have flashback enabled.
+
+-- PRIMARY DB
+
+SQL> select name,database_role,flashback_on from v$database;
+
+NAME DATABASE_ROLE FLASHBACK_ON
+--------- ---------------- ------------------
+PRIMDB PRIMARY YES
+
+-- STANDBY DB
+
+SQL> select name,database_role,flashback_on from v$database;
+
+NAME DATABASE_ROLE FLASHBACK_ON
+--------- ---------------- ------------------
+STDBY PHYSICAL STANDBY YES
+
+2. Create a restore point in the primary:[PRIMARY]
+
+SQL> create restore point BEFORE_TEST GUARANTEE FLASHBACK DATABASE;
+
+Restore point created.
+
+SQL> select scn,NAME from v$restore_point;
+
+SCN NAME
+---------- -----------------------
+14084750 BEFORE_TEST
+
+Now we can confirm the dev team to do the changes in the primary database. And once dev team confirmed that their testing is over,
+Follow below steps to flashback primary.
+
+
+4. Shutdown Primary database [ PRIMARY]
+
+SQL> SHUTDOWN IMMEDIATE
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+5. Mount primary database [ PRIMARY]
+
+
+SQL> startup mount
+ORACLE instance started.
+
+Total System Global Area 1.1107E+10 bytes
+Fixed Size 7644464 bytes
+Variable Size 9294584528 bytes
+Database Buffers 1711276032 bytes
+Redo Buffers 93011968 bytes
+Database mounted.
+6. Flashback primary database [ PRIMARY]
+
+SQL> flashback database to restore point BEFORE_TEST;
+
+Flashback complete.
+
+7 . Open primary database in resetlogs: [ PRIMARY]
+
+SQL> alter database open resetlogs;
+Database altered.
+8. Cancel the recovery on standby: [ STANDBY]
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
+
+9. Flashback standby database [ STANDBY]
+Get the SCN value from point 2 (the respective scn of the guarantee restore point)
+
+SQL>FLASHBACK STANDBY DATABASE TO 14084750;
+
+Flashback complete.
+10. Start recovery [ STANDBY]
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+
+Database altered
+NOTE:
+If you are getting below error in standby, then we need to recreate the control file in standby
+
+Sequence 22 does not yet exist in new incarnation, and it has been already
+applied in the old.
