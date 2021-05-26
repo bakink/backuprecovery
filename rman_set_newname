@@ -1,0 +1,48 @@
+
+export ORACLE_SID=CPUTEST
+export ORACLE_HOME=/u01/app/oracle/product/11.2.0/dbhome_1
+export NLS_DATE_FORMATPATH=$ORACLE_HOME/bin:$PATH
+export PATH=$ORACLE_HOME/bin:$PATH
+export NLS_DATE_FORMAT="MM/DD/YYYY HH24:MI:SS"
+
+rman target / catalog user/pass@RCAT << EOF
+RUN {
+sql 'alter system set "_backup_disk_bufcnt"=64 scope=memory ';
+sql 'alter system set "_backup_disk_bufsz"=1048576 scope=memory';
+sql 'alter system set "_backup_file_bufcnt"=64 scope=memory';
+sql 'alter system set "_backup_file_bufsz"=4194304 scope=memory';
+
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch01 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch02 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch03 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch04 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch05 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch06 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch07 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch08 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch09 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch10 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch11 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch12 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch13 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch14 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch15 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch16 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch17 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch18 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch19 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch20 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch21 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch22 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch23 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch24 TYPE 'SBT_TAPE' maxopenfiles = 1;
+ALLOCATE CHANNEL ch25 TYPE 'SBT_TAPE' maxopenfiles = 1;
+SEND 'NB_ORA_POLICY=TEST_Full, NB_ORA_SERV=TESTbckcls, NB_ORA_CLIENT=testsrv_bck';
+##set until time "to_date('12/06/2020 09:00:00', 'dd/mm/yyyy hh24:mi:ss')";
+SET NEWNAME FOR DATABASE TO '+DG_BS_DATA/BSTEST/DATAFILE/%U';
+restore database;
+switch datafile all;
+##recover database;
+}
+EOF
