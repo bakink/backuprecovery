@@ -1,0 +1,297 @@
+
+--http://www.nazmulhuda.info/rman-backup-from-standby-database-to-reduce-load-on-primary-database-in-data-guard-environment-using-catalog
+
+RMAN backup from Standby database to reduce load on primary database in Data guard Environment using Catalog
+-- The following 3 database server used for primary, standby and catalog database and backup taken from standby database
+-- TESTDB1: Primary Database
+-- TESTBD2: Standby Database
+-- CATDB  : Catalog Database
+
+
+-- Create Catalog User
+CREATE USER rman
+IDENTIFIED BY rman123
+TEMPORARY TABLESPACE temp
+DEFAULT TABLESPACE RMANCAT
+QUOTA UNLIMITED ON RMANCAT;
+
+-- Grant RECOVERY_CALATOL_OWNER to rman
+GRANT RECOVERY_CATALOG_OWNER TO rman;
+
+-- Create catalog database
+[oracle@catdb ~]$ rman CATALOG rman/rman123
+
+Recovery Manager: Release 11.2.0.3.0 - Production on Wed Apr 19 23:56:41 2017
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to recovery catalog database
+
+RMAN> CREATE CATALOG;
+
+recovery catalog created
+
+
+
+-- Added in both primary and standby database in tnsnames.ora file
+CATDB =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = catdb.db.com)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVICE_NAME = CATDB)
+     )
+  )
+
+
+-- Add in catalog database tnsnames.ora file
+TESTDB1 =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = testdb1.db.com)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVICE_NAME = testdb1)
+     )
+   )
+
+TESTDB2 =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = testdb2.db.com)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVICE_NAME = testdb2)
+     )
+   )
+
+
+-- register primary database and configure standby connect identifier
+-- In Primary database (testdb1)
+[oracle@testdb1 ~]$ rman target / catalog rman/rman123@CATDB
+
+Recovery Manager: Release 11.2.0.3.0 - Production on Thu Apr 20 09:36:23 2017
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: TESTDB1 (DBID=693279980)
+connected to recovery catalog database
+
+RMAN> register database;
+
+database registered in recovery catalog
+starting full resync of recovery catalog
+full resync complete
+
+RMAN>  LIST DB_UNIQUE_NAME OF DATABASE;
+
+
+List of Databases
+DB Key  DB Name  DB ID            Database Role    Db_unique_name
+------- ------- ----------------- ---------------  ------------------
+1       TESTDB1  693279980        PRIMARY          TESTDB1
+
+RMAN> CONFIGURE DB_UNIQUE_NAME 'testdb2' CONNECT IDENTIFIER 'testdb2';
+
+new RMAN configuration parameters:
+CONFIGURE DB_UNIQUE_NAME 'testdb2' CONNECT IDENTIFIER  'testdb2';
+new RMAN configuration parameters are successfully stored
+starting full resync of recovery catalog
+full resync complete
+
+RMAN> LIST DB_UNIQUE_NAME OF DATABASE;
+
+
+List of Databases
+DB Key  DB Name  DB ID            Database Role    Db_unique_name
+------- ------- ----------------- ---------------  ------------------
+1       TESTDB1  693279980        PRIMARY          TESTDB1
+1       TESTDB1  693279980        STANDBY          TESTDB2
+
+RMAN> CONFIGURE RETENTION POLICY TO REDUNDANCY 1;
+
+new RMAN configuration parameters:
+CONFIGURE RETENTION POLICY TO REDUNDANCY 1;
+new RMAN configuration parameters are successfully stored
+starting full resync of recovery catalog
+full resync complete
+RESYNC CATALOG FROM DB_UNIQUE_NAME 
+
+
+RMAN> CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+
+old RMAN configuration parameters:
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+new RMAN configuration parameters:
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+new RMAN configuration parameters are successfully stored
+starting full resync of recovery catalog
+full resync complete
+
+RMAN>   create global script backup_Inc0_archive_logs_compressed
+{
+        configure controlfile autobackup on;
+        CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/mnt/dbasharedvol/backup_tests/%d/%Y%M%D_%d_ctrl_%F.backup';
+        allocate channel c1 DEVICE TYPE DISK MAXPIECESIZE = 10G;
+        allocate channel c2 DEVICE TYPE DISK MAXPIECESIZE = 10G;
+        allocate channel c3 DEVICE TYPE DISK MAXPIECESIZE = 10G;
+        allocate channel c4 DEVICE TYPE DISK MAXPIECESIZE = 10G;
+        backup spfile format "/mnt/dbasharedvol/backup_tests/%d/%Y%M%D_%d_spfile_%s_%p.bkp";
+        backup as compressed backupset incremental level 0 database format "/mnt/dbasharedvol/backup_tests/%d/%Y%M%D_%d_inc0_db_compressed_%s_%p.bkp"
+        plus archivelog
+        delete all input
+        format "/mnt/dbasharedvol/backup_tests/%d/%Y%M%D_%d_inc0_arc_compressed_%s_%p.bkp";
+        delete noprompt obsolete device type disk;
+       release channel c1;
+       release channel c2;
+       release channel c3;
+       release channel c4;
+}
+
+created global script sbackup_Inc0_archive_logs_compressed
+
+
+
+-- testdb2 (Standby)
+
+[oracle@testdb2 ~]$ rman target / catalog rman/rman123@CATDB
+
+Recovery Manager: Release 11.2.0.3.0 - Production on Thu Apr 20 09:33:31 2017
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: TESTDB1 (DBID=693279980, not open)
+connected to recovery catalog database
+
+RMAN> LIST DB_UNIQUE_NAME OF DATABASE;
+
+
+List of Databases
+DB Key  DB Name  DB ID            Database Role    Db_unique_name
+------- ------- ----------------- ---------------  ------------------
+1       TESTDB1  693279980        PRIMARY          TESTDB1
+1       TESTDB1  693279980        STANDBY          TESTDB2
+
+
+RMAN> CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK;
+
+old RMAN configuration parameters:
+CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DISK;
+new RMAN configuration parameters:
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK;
+new RMAN configuration parameters are successfully stored
+
+
+-- Test
+-- Try to delete archivelogs from standby before backup and log file applied in all standby
+-- Testdb2
+RMAN> DELETE NOPROMPT ARCHIVELOG ALL;
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=199 device type=DISK
+RMAN-08138: WARNING: archived log not deleted - must create more backups
+archived log file name=/holding/testdb2/standby_logs/1_52_941163822.dbf thread=1 sequence=52
+RMAN-08138: WARNING: archived log not deleted - must create more backups
+archived log file name=/holding/testdb2/standby_logs/1_53_941163822.dbf thread=1 sequence=53
+RMAN-08138: WARNING: archived log not deleted - must create more backups
+archived log file name=/holding/testdb2/standby_logs/1_54_941163822.dbf thread=1 sequence=54
+RMAN-08138: WARNING: archived log not deleted - must create more backups
+archived log file name=/holding/testdb2/standby_logs/1_55_941163822.dbf thread=1 sequence=55
+RMAN-08138: WARNING: archived log not deleted - must create more backups
+archived log file name=/holding/testdb2/standby_logs/1_56_941163822.dbf thread=1 sequence=56
+RMAN-08138: WARNING: archived log not deleted - must create more backups
+archived log file name=/holding/testdb2/standby_logs/1_57_941163822.dbf thread=1 sequence=57
+RMAN-08120: WARNING: archived log not deleted, not yet applied by standby
+archived log file name=/holding/testdb2/standby_logs/1_58_941163822.dbf thread=1 sequence=58
+List of Archived Log Copies for database with db_unique_name TESTDB2
+=====================================================================
+
+Key     Thrd Seq     S Low Time
+------- ---- ------- - ---------
+711     1    51      A 20-APR-17
+        Name: /holding/testdb2/standby_logs/1_51_941163822.dbf
+
+deleted archived log
+archived log file name=/holding/testdb2/standby_logs/1_51_941163822.dbf RECID=34 STAMP=941814623
+Deleted 1 objects
+-- Take backup from testdb2
+[oracle@testdb2 ~]$ rman target / catalog rman/rman123@CATDB script backup_Inc0_archive_logs_compressed log /tmp/baclup_"RUNTIME".log
+
+[oracle@testdb2 ~]$ rman target / catalog rman/rman123@CATDB
+
+Recovery Manager: Release 11.2.0.3.0 - Production on Thu Apr 20 15:13:01 2017
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: TESTDB1 (DBID=693279980, not open)
+connected to recovery catalog database
+
+RMAN> DELETE NOPROMPT ARCHIVELOG ALL;
+
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=199 device type=DISK
+RMAN-08120: WARNING: archived log not deleted, not yet applied by standby
+archived log file name=/holding/testdb2/standby_logs/1_58_941163822.dbf thread=1 sequence=58
+
+
+-- After performing a log swichover in primary database the log file applied in standby and delted
+RMAN>  DELETE NOPROMPT ARCHIVELOG ALL;
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=199 device type=DISK
+RMAN-08120: WARNING: archived log not deleted, not yet applied by standby
+archived log file name=/holding/testdb2/standby_logs/1_59_941163822.dbf thread=1 sequence=59
+List of Archived Log Copies for database with db_unique_name TESTDB2
+=====================================================================
+
+Key     Thrd Seq     S Low Time
+------- ---- ------- - ---------
+779     1    58      A 20-APR-17
+        Name: /holding/testdb2/standby_logs/1_58_941163822.dbf
+
+deleted archived log
+archived log file name=/holding/testdb2/standby_logs/1_58_941163822.dbf RECID=41 STAMP=941814670
+Deleted 1 objects
+
+-- Try to delete archivelogs from primary before it applied to standby
+-- testdb1
+[oracle@testdb1 archive_logs]$  rman target / catalog rman/rman123@CATDB
+
+Recovery Manager: Release 11.2.0.3.0 - Production on Thu Apr 20 15:18:15 2017
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: TESTDB1 (DBID=693279980)
+connected to recovery catalog database
+
+RMAN> sql 'alter system switch logfile';
+
+sql statement: alter system switch logfile
+
+RMAN> sql 'alter system switch logfile';
+
+sql statement: alter system switch logfile
+
+RMAN> sql 'alter system switch logfile';
+
+sql statement: alter system switch logfile
+
+RMAN> DELETE NOPROMPT ARCHIVELOG ALL;
+
+released channel: ORA_DISK_1
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=140 device type=DISK
+RMAN-08120: WARNING: archived log not deleted, not yet applied by standby
+archived log file name=/holding/testdb1/archive_logs/1_62_941163822.dbf thread=1 sequence=62
+RMAN-08120: WARNING: archived log not deleted, not yet applied by standby
+archived log file name=/holding/testdb1/archive_logs/1_63_941163822.dbf thread=1 sequence=63
+RMAN-08120: WARNING: archived log not deleted, not yet applied by standby
+archived log file name=/holding/testdb1/archive_logs/1_64_941163822.dbf thread=1 sequence=64
+RMAN-08120: WARNING: archived log not deleted, not yet applied by standby
+archived log file name=/holding/testdb1/archive_logs/1_65_941163822.dbf thread=1 sequence=65
+
+
+Comments
