@@ -1,0 +1,239 @@
+--http://www.dadbm.com/oracle-rman-recovery-script-for-emc-networker/
+--http://www.dadbm.com/oracle-rman-recovery-script-for-emc-networker/
+
+------------full
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE 'SBT_TAPE' TO 'cf_sp_%d_%I_%F';
+SHOW ALL;
+
+RUN {
+set command id to 'BAANOnlineBackupFull_inc_lvl_0';
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch01 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch02 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch03 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch04 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch05 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch06 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch07 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch08 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch09 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+
+BACKUP
+    INCREMENTAL LEVEL=0
+    TAG BAANFULL_inc_lvl_0
+    FILESPERSET 1
+    FORMAT 'bk_%d_%I_%s_%p_%t'
+    DATABASE;
+    sql 'alter system archive log current';
+RELEASE CHANNEL ch00;
+RELEASE CHANNEL ch01;
+RELEASE CHANNEL ch02;
+RELEASE CHANNEL ch03;
+RELEASE CHANNEL ch04;
+RELEASE CHANNEL ch05;
+RELEASE CHANNEL ch06;
+RELEASE CHANNEL ch07;
+RELEASE CHANNEL ch08;
+RELEASE CHANNEL ch09;
+
+# backup all archive logs
+# and delete sysdate - 2
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch01 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+BACKUP
+    TAG BAANARCH_inc_lvl_0
+    filesperset 20
+    FORMAT 'al_%d_%I_%s_%p_%t'
+    NOT BACKED UP ARCHIVELOG ALL;
+#    delete force noprompt archivelog until time 'sysdate-2';
+    delete archivelog until time 'sysdate-2';
+RELEASE CHANNEL ch00;
+RELEASE CHANNEL ch01;
+#
+# Note: During the process of backing up the database, RMAN also backs up the
+# control file.  That backup of the control file does not contain the
+# information about the archive log backup if "nocatalog" has been specified.
+# To include the information about the current backup, the control file should
+# be backed up as the last step.  This step may not be necessary if using
+# a recovery catalog or AUTOBACKUP CONTROLFILE.
+#
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+BACKUP
+    TAG BAANCTRL_inc_lvl_0
+    FORMAT 'cntrl_%d_%I_%s_%p_%t'
+    CURRENT CONTROLFILE;
+RELEASE CHANNEL ch00;
+}
+
+
+------------incr level 1
+
+RUN {
+set command id to 'BAANOnlineBackupInc_lvl_1';
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch01 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch02 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch03 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch04 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch05 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch06 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch07 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch08 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch09 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+
+BACKUP
+    INCREMENTAL LEVEL=1
+    TAG BAANFULL_inc_lvl_1
+    FILESPERSET 1
+    FORMAT 'bk_%d_%I_%s_%p_%t'
+    DATABASE;
+    sql 'alter system archive log current';
+RELEASE CHANNEL ch00;
+RELEASE CHANNEL ch01;
+RELEASE CHANNEL ch02;
+RELEASE CHANNEL ch03;
+RELEASE CHANNEL ch04;
+RELEASE CHANNEL ch05;
+RELEASE CHANNEL ch06;
+RELEASE CHANNEL ch07;
+RELEASE CHANNEL ch08;
+RELEASE CHANNEL ch09;
+
+# backup all archive logs
+# and delete sysdate - 2
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch01 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+BACKUP
+    TAG BAANARCH_inc_lvl_1
+    filesperset 20
+    FORMAT 'al_%d_%I_%s_%p_%t'
+    NOT BACKED UP ARCHIVELOG ALL;
+#    delete force noprompt archivelog until time 'sysdate-2';
+    delete archivelog until time 'sysdate-2';
+RELEASE CHANNEL ch00;
+RELEASE CHANNEL ch01;
+#
+# Note: During the process of backing up the database, RMAN also backs up the
+# control file.  That backup of the control file does not contain the
+# information about the archive log backup if "nocatalog" has been specified.
+# To include the information about the current backup, the control file should
+# be backed up as the last step.  This step may not be necessary if using
+# a recovery catalog or AUTOBACKUP CONTROLFILE.
+#
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+BACKUP
+    TAG BAANCTRL_inc_lvl_1
+    FORMAT 'cntrl_%d_%I_%s_%p_%t'
+    CURRENT CONTROLFILE;
+RELEASE CHANNEL ch00;
+}
+
+----------cumulative 
+
+RUN {
+set command id to 'BAANOnlineBackupInc_lvl_1_cinc';
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch01 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch02 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch03 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch04 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch05 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch06 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch07 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch08 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch09 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+
+BACKUP
+    INCREMENTAL LEVEL=1 CUMULATIVE
+    TAG BAANFULL_inc_lvl_1_cinc
+    FILESPERSET 1
+    FORMAT 'bk_%d_%I_%s_%p_%t'
+    DATABASE;
+    sql 'alter system archive log current';
+RELEASE CHANNEL ch00;
+RELEASE CHANNEL ch01;
+RELEASE CHANNEL ch02;
+RELEASE CHANNEL ch03;
+RELEASE CHANNEL ch04;
+RELEASE CHANNEL ch05;
+RELEASE CHANNEL ch06;
+RELEASE CHANNEL ch07;
+RELEASE CHANNEL ch08;
+RELEASE CHANNEL ch09;
+
+# backup all archive logs
+# and delete sysdate - 2
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch01 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+BACKUP
+    TAG BAANARCH_inc_lvl_1_cinc
+    filesperset 20
+    FORMAT 'al_%d_%I_%s_%p_%t'
+    NOT BACKED UP ARCHIVELOG ALL;
+#    delete force noprompt archivelog until time 'sysdate-2';
+    delete archivelog until time 'sysdate-2';
+RELEASE CHANNEL ch00;
+RELEASE CHANNEL ch01;
+#
+# Note: During the process of backing up the database, RMAN also backs up the
+# control file.  That backup of the control file does not contain the
+# information about the archive log backup if "nocatalog" has been specified.
+# To include the information about the current backup, the control file should
+# be backed up as the last step.  This step may not be necessary if using
+# a recovery catalog or AUTOBACKUP CONTROLFILE.
+#
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+BACKUP
+    TAG BAANCTRL_inc_lvl_1_cinc
+    FORMAT 'cntrl_%d_%I_%s_%p_%t'
+    CURRENT CONTROLFILE;
+RELEASE CHANNEL ch00;
+}
+
+
+---- arch
+
+
+RUN {
+set command id to 'BAANOnlineBackupArc';
+
+# backup all archive logs
+# and delete sysdate - 2
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+ALLOCATE CHANNEL ch01 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+BACKUP
+    TAG BAANARCH_ALL
+    filesperset 20
+    FORMAT 'al_%d_%I_%s_%p_%t'
+    NOT BACKED UP ARCHIVELOG ALL;
+#    delete force noprompt archivelog until time 'sysdate-2';
+    delete archivelog until time 'sysdate-2';
+RELEASE CHANNEL ch00;
+RELEASE CHANNEL ch01;
+#
+# Note: During the process of backing up the database, RMAN also backs up the
+# control file.  That backup of the control file does not contain the
+# information about the archive log backup if "nocatalog" has been specified.
+# To include the information about the current backup, the control file should
+# be backed up as the last step.  This step may not be necessary if using
+# a recovery catalog or AUTOBACKUP CONTROLFILE.
+#
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=nsrserver1,NSR_DATA_VOLUME_POOL=OracleProd,NSR_GROUP=Oracle_Full,NSR_CLIENT=pars.nsr.tr)';
+BACKUP
+    TAG BAANCTRL_ARCALL
+    FORMAT 'cntrl_%d_%I_%s_%p_%t'
+    CURRENT CONTROLFILE;
+RELEASE CHANNEL ch00;
+}
