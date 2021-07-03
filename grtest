@@ -1,0 +1,99 @@
+#!/bin/bash
+################################################
+#                                              #
+#          METOD IT ACADEMY - 2016/02          #
+#                                              #
+################################################
+
+##### ENVIRONMENT
+
+. /home/oracle/.bash_profile                                         # DO NOT CHANGE THIS LINE
+. /home/oracle/.grtest2.env                                          # CHANGE OR REMOVE
+export NLS_DATE_FORMAT='DD-MM-YYYY HH24:MI:SS'                       # DO NOT CHANGE THIS LINE
+
+
+##### GLOBAL VARIABLES
+
+DATE=$(date +%Y%m%d)                                                  # DO NOT CHANGE THIS LINE
+TAG_DATE=$(date +%Y%m%dT%H%M%S)
+LOG_DIRECTORY="/home/oracle/logs"                                     # SPECIFY PARENT DIRECTORY FOR LOG FILES ($LOG_DIRECTORY/backup will be used for backup log files)
+SCRIPT_DIRECTORY="/home/oracle/scripts"                               # SPECIFY PARENT DIRECTORY FOR SCRIPT FILES ($SCRIPT_DIRECTORY/$DB_NAME will be used)
+
+##### DB SPECIFIC VARIABLES
+
+DB_NAME="GRTEST"                                                       # db unique name - prefer uppercase
+
+##### BACKUP
+
+DB_LOG_DIRECTORY="${LOG_DIRECTORY}/${DB_NAME}/backup"                # DO NOT CHANGE THIS LINE - backup logs directory
+DB_SCRIPT_DIRECTORY="${SCRIPT_DIRECTORY}/${DB_NAME}"                 # DO NOT CHANGE THIS LINE - backup scripts directory
+BACKUP_LOG_NAME=${DB_LOG_DIRECTORY}/${DB_NAME}_backup_${DATE}.log    # DO NOT CHANGE THIS LINE - log for backup script
+RMAN_LOG_NAME=${DB_LOG_DIRECTORY}/${DB_NAME}_rman_${DATE}.log        # DO NOT CHANGE THIS LINE - log for rman backup
+
+
+
+# START
+        echo "Backup Script Start                         : $(date)" >> ${BACKUP_LOG_NAME}
+        echo >> ${BACKUP_LOG_NAME}
+
+
+# RMAN BACKUP
+
+        echo "Rman Backup Start                           : $(date)" >> ${BACKUP_LOG_NAME}
+#
+#
+#
+rman target=/ catalog=rman12102/rman12102@RCATDB log=${RMAN_LOG_NAME} append <<EOFRMAN
+RUN {
+set command id to 'GRTESTOnlineBackupFull_inc_lvl_0';
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=goliath.nsr.tr,NSR_CLIENT=pars.nsr.tr)';
+CROSSCHECK ARCHIVELOG ALL;
+CROSSCHECK BACKUP;
+CROSSCHECK COPY;
+DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+DELETE NOPROMPT EXPIRED BACKUP;
+DELETE NOPROMPT EXPIRED COPY;
+DELETE NOPROMPT OBSOLETE;
+
+#backup database full
+BACKUP INCREMENTAL LEVEL=0 TAG GRTESTFULL_inc_lvl_0_${TAG_DATE} FILESPERSET 1 FORMAT 'bk_%d_%I_%s_%p_%t' DATABASE;
+sql 'alter system archive log current';
+RELEASE CHANNEL ch00;
+
+# backup all archive logs and delete sysdate - 2
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=goliath.nsr.tr,NSR_CLIENT=pars.nsr.tr)';
+BACKUP TAG GRTESTARCH_inc_lvl_0_${TAG_DATE} filesperset 20 FORMAT 'al_%d_%I_%s_%p_%t' NOT BACKED UP ARCHIVELOG ALL;
+DELETE ARCHIVELOG UNTIL TIME 'SYSDATE-2';
+RELEASE CHANNEL ch00;
+
+# backup controlfile 
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=goliath.nsr.tr,NSR_CLIENT=pars.nsr.tr)';
+
+BACKUP TAG GRTESTCTRL_inc_lvl_0_${TAG_DATE} FORMAT 'cntrl_%d_%I_%s_%p_%t' CURRENT CONTROLFILE;
+RELEASE CHANNEL ch00;
+
+#backup spfile
+ALLOCATE CHANNEL ch00 TYPE 'SBT_TAPE';
+SEND 'NSR_ENV=(NSR_SERVER=goliath.nsr.tr,NSR_CLIENT=pars.nsr.tr)';
+
+BACKUP TAG GRTESTSPFL_inc_lvl_0_${TAG_DATE} FORMAT 'spfl_%d_%I_%s_%p_%t' SPFILE;
+RELEASE CHANNEL ch00;
+}
+exit
+EOFRMAN
+#
+#
+#
+        echo "Rman Backup End                             : $(date)" >> ${BACKUP_LOG_NAME}
+        echo >> ${BACKUP_LOG_NAME}
+
+# END
+        echo "Backup Script End                           : $(date)" >> ${BACKUP_LOG_NAME}
+        echo >> ${BACKUP_LOG_NAME}
+        echo "----------------------------------------------------------------------------------------------" >> ${BACKUP_LOG_NAME}
+        echo >> ${BACKUP_LOG_NAME}
+
+
