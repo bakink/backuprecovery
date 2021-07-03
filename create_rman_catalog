@@ -1,0 +1,12 @@
+
+create tablespace rcat_data datafile '+DATA' size 100m auto extent next 100m maxsize 32767m;
+create user rman12102 identified by rman#12102 default tablespace rcat_data;
+alter user rman12102 quota unlimited on rcat_data;
+GRANT RECOVERY_CATALOG_OWNER TO rman12102;
+
+GRANT connect, resource, recovery_catalog_owner TO rcat_data;  
+
+
+rman catalog=rman12102/rman#12102@RCATDB
+
+CREATE CATALOG TABLESPACE rcat_data;
