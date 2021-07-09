@@ -1,0 +1,62 @@
+--https://damir-vadas.blogspot.com/2010/02/how-to-find-correct-scn.html
+
+To see status of all restored datafiles can be done with this SQL
+?
+set linesize 200;
+set pagesize 100;
+col inst_id for 9999999 heading 'Instance #'
+col file_nr for 9999999 heading 'File #'
+col file_name for A50 heading 'File name'
+col checkpoint_change_nr for 99999999999999 heading 'Checkpoint #'
+col checkpoint_change_time for A20 heading 'Checkpoint time'
+col last_change_nr for 99999999999999 heading 'Last change #'
+SELECT
+      fe.inst_id,
+      fe.fenum file_nr,
+      fn.fnnam file_name,
+      TO_NUMBER (fe.fecps) checkpoint_change_nr,
+      fe.fecpt checkpoint_change_time,
+      fe.fests last_change_nr,
+      DECODE (
+              fe.fetsn,
+              0, DECODE (BITAND (fe.festa, 2), 0, 'SYSOFF', 'SYSTEM'),
+              DECODE (BITAND (fe.festa, 18),
+                      0, 'OFFLINE',
+                      2, 'ONLINE',
+                      'RECOVER')
+      ) status
+FROM x$kccfe fe,
+     x$kccfn fn
+WHERE    (   (fe.fepax != 65535 AND fe.fepax != 0 )
+          OR (fe.fepax = 65535 OR fe.fepax = 0)
+         )
+     AND fn.fnfno = fe.fenum
+     AND fe.fefnh = fn.fnnum
+     AND fe.fedup != 0
+     AND fn.fntyp = 4
+     AND fn.fnnam IS NOT NULL
+     AND BITAND (fn.fnflg, 4) != 4
+ORDER BY fe.fenum
+;
+The output might looks like:
+?
+Instance #   File # File name                                             Checkpoint # Checkpoint time      Last change #    STATUS
+---------- -------- -------------------------------------------------- --------------- -------------------- ---------------- ----------------------------
+         1        1 /db/SOME_DB/dbf01/system01.dbf                         12039685200 03/10/2021 17:18:23                   SYSTEM
+         1        2 /db/SOME_DB/dbf01/sysaux01.dbf                         12039685200 03/10/2021 17:18:23                   ONLINE
+         1        3 /db/SOME_DB/und_01/undotbs01.dbf                       12039685200 03/10/2021 17:18:23                   ONLINE
+         1        4 /db/SOME_DB/dbf01/users01.dbf                          12039685200 03/10/2021 17:18:23                   ONLINE
+         1        5 /db/SOME_DB/dbf01/gen_gfc_prod01.dbf                   12039685200 03/10/2021 17:18:23                   ONLINE
+         1        6 /db/SOME_DB/dbf01/gen_gfc_prod02.dbf                   12039685200 03/10/2021 17:18:23                   ONLINE
+         1        7 /db/SOME_DB/dbf01/gen_gfc_prod03.dbf                   12039685200 03/10/2021 17:18:23                   ONLINE
+         1        8 /db/SOME_DB/dbf01/gen_gfc_prod04.dbf                   12039685200 03/10/2021 17:18:23                   ONLINE
+         1        9 /db/SOME_DB/dbf01/gen_gfc_prod05.dbf                   12039685200 03/10/2021 17:18:23                   ONLINE
+         1       10 /db/SOME_DB/dbf01/gen_gfc_prod06.dbf                   12039685200 03/10/2021 17:18:23                   ONLINE
+         1       11 /db/SOME_DB/dbf01/gen_gfc_prod07.dbf                   12039685200 03/10/2021 17:18:23                   ONLINE
+         1       12 /db/SOME_DB/dbf01/sysaud01.dbf                         12039685200 03/10/2021 17:18:23                   ONLINE
+         1       13 /db/SOME_DB/dbf01/gen_gfc_prod08                        9340774962 01/04/2021 11:04:30  9341443930       RECOVER
+         1       14 /db/SOME_DB/dbf01/gen_gfc_prod08.dbf                   12039685200 03/10/2021 17:18:23                   ONLINE
+         1       15 /db/SOME_DB/dbf01/gen_gfc_prod09.dbf                   12039685200 03/10/2021 17:18:23                   ONLINE
+         1       16 /db/SOME_DB/dbf01/gen_gfc_prod10.dbf                   12039685200 03/10/2021 17:18:23                   ONLINE
+ 
+16 rows selected.
